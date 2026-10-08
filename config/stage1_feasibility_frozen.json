@@ -1,0 +1,144 @@
+{
+  "manifest_kind": "Stage 1 cost-free feasibility screening — approved frozen configuration",
+  "manifest_status": "FROZEN_PENDING_IMPLEMENTATION_AND_ONE_AUTHORIZED_EXECUTION",
+  "study_repository": "https://github.com/hjinyy/new_agv_wpt_system",
+  "created_utc": "2026-10-08",
+  "stage_scope": {
+    "included": [
+      "primitive-factor DES evaluation",
+      "50-replication common-random-number feasibility screening",
+      "Relaxed/Nominal/Strict controlled epsilon filters",
+      "rho diagnostic calculation",
+      "Stage 1 feasibility-map reporting"
+    ],
+    "excluded": [
+      "CAPEX or OPEX calculation",
+      "cost minimization",
+      "KEPCO tariff-cell selection",
+      "Stage 2 economic post-processing",
+      "economic figures or design selection"
+    ]
+  },
+  "source_model_provenance": {
+    "source_repository_path": "/home/hy/wpt_agv_opportunity_charging",
+    "source_repository_sha": "261a31767856f140925b8bc98af6b6c4b2cdad67",
+    "physical_table_path": "data/wpt_reference/jeebklum_imura_sumpavakup_2026_table2_misalignment_measurements.csv",
+    "physical_table_sha256": "09a15d610d7659810a5d6b413a93b862c6546ff02aa2d5087724ef74c1163633",
+    "source_rho_config_sha256": "148f3b2d3a3e01c8c2d316c7912f3169a059d1979c54d8035519021d42556532",
+    "source_frozen_c4_sha256": "cc37d978ec64a061caf1586980297f8ab034151972ff16ee4b007c37ce3e911f",
+    "source_frozen_c5_sha256": "941b443139ee3d1022d6e7a1f8bcd746f24e3e48b5bd5961cc71081393fc1d5c",
+    "physical_model": {
+      "citation_key": "Jeebklum_Imura_Sumpavakup_2026_Table2",
+      "nominal_aligned_battery_side_power_kw": 3.0,
+      "delivered_power_formula": "P_charge(delta) = 3.0 kW * Pout_mean(delta) / Pout_mean(0 mm)",
+      "efficiency_use": "eta(delta) determines WPT input and loss only: E_input=E_delivered/eta; do not multiply battery-side delivered energy by eta again."
+    }
+  },
+  "operational_model": {
+    "operation_hours": 24,
+    "task_distance_m_by_picking_point": [30, 40, 50, 60, 70],
+    "urgent_task_probability": 0.2,
+    "agv_speed_mps": 1.0,
+    "picking_service_s": 45.0,
+    "staging_service_s": 45.0,
+    "deadline": {
+      "formula": "arrival + 2*distance/agv_speed + picking_service + staging_service + urgency_slack",
+      "urgent_slack_s": 240.0,
+      "normal_slack_s": 480.0,
+      "interpretation": "controlled assumption; not literature-derived"
+    },
+    "battery": {
+      "capacity_kwh": 5.0,
+      "initial_soc_distribution": "Uniform(0.50, 0.80)",
+      "minimum_soc": 0.15,
+      "critical_soc": 0.2,
+      "maximum_soc": 0.9
+    },
+    "energy": {
+      "traction_kwh_per_km": 0.2,
+      "auxiliary_kw": 0.05,
+      "zone_pad_distance_m": 5.0,
+      "opportunity_quantum_s": 60.0
+    }
+  },
+  "alignment_conditions": {
+    "Good": {
+      "delta_mm": [0, 50, 100, 150, 200, 250, 300, 350],
+      "probabilities": [0.55, 0.35, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0],
+      "prediction_error": {"delta_steps_mm": [0], "probabilities": [1.0]}
+    },
+    "Moderate": {
+      "delta_mm": [0, 50, 100, 150, 200, 250, 300, 350],
+      "probabilities": [0.2, 0.35, 0.3, 0.15, 0.0, 0.0, 0.0, 0.0],
+      "prediction_error": {"delta_steps_mm": [-50, 0, 50], "probabilities": [0.2, 0.6, 0.2]}
+    },
+    "Severe": {
+      "delta_mm": [0, 50, 100, 150, 200, 250, 300, 350],
+      "probabilities": [0.0, 0.1, 0.35, 0.3, 0.25, 0.0, 0.0, 0.0],
+      "prediction_error": {"delta_steps_mm": [-50, 0, 50], "probabilities": [0.2, 0.6, 0.2]}
+    },
+    "interpretation": "Controlled misalignment-sensitivity cases, not empirical fleet distributions. 250–350 mm states are excluded from the Stage 1 normal-operation mixtures."
+  },
+  "policies": {
+    "C1": "mandatory threshold charging baseline",
+    "C2": "opportunity charging, FCFS allocation",
+    "C3": "opportunity charging, lowest-SOC allocation",
+    "C4": {
+      "description": "frozen five-feature priority, predicted WPT condition only",
+      "weights": {"soc": 0.0, "next_task_energy": 0.7, "idle": 0.0, "charging_power_quality": 0.0, "deadline": 0.3}
+    },
+    "C5": {
+      "description": "15-min rolling-horizon MILP reference; first 60-s slot executed; not global optimum",
+      "scales": {"lambda_soc": 1.5, "lambda_task": 1.5, "lambda_kpi": 2.0},
+      "horizon_s": 900.0,
+      "slot_s": 60.0,
+      "time_limit_s": 0.1,
+      "mip_relative_gap": 0.001
+    }
+  },
+  "primitive_grid": {
+    "n_agvs": [5, 6, 7, 8],
+    "n_wpt_pads": [1, 2, 3],
+    "task_arrival_rate_per_h": [75, 90, 105],
+    "alignment_condition": ["Good", "Moderate", "Severe"],
+    "policy": ["C1", "C2", "C3", "C4", "C5"],
+    "candidate_definition": "A policy-specific primitive combination",
+    "candidate_count": 540,
+    "primitive_combinations_without_policy": 108
+  },
+  "randomness": {
+    "replications_per_policy_specific_candidate": 50,
+    "stage1_seed_block": {"start": 91001, "end": 91050, "count": 50},
+    "common_random_numbers": "For each fixed (N_A,N_P,lambda,alignment,replication), identical generated arrivals, task types/distances, initial SOCs, predicted WPT states, and realized-condition draws are supplied to C1–C5. The policy alone may change scheduling actions.",
+    "historical_blocks_explicitly_excluded": ["4007–4056", "5007–5056", "6007–6056", "7007–7056", "7107–7156", "8007–8056"],
+    "reserved_final_seed_policy": "A separate unused block will be proposed only after Stage 1 and Stage 2 configurations are frozen; no Stage 1 seed may be represented as unseen final evidence."
+  },
+  "feasibility_filters": {
+    "aggregation_rule": "Completion, urgent on-time, and mean delay use the mean over 50 replications. Zero low-SOC stops is required in every replication.",
+    "levels": {
+      "Relaxed": {"completion_rate_percent_min": 95.0, "urgent_on_time_rate_percent_min": 80.0, "mean_delay_minutes_max": 15.0, "all_replications_low_soc_stops_equal_zero": true},
+      "Nominal": {"completion_rate_percent_min": 97.0, "urgent_on_time_rate_percent_min": 90.0, "mean_delay_minutes_max": 10.0, "all_replications_low_soc_stops_equal_zero": true},
+      "Strict": {"completion_rate_percent_min": 99.0, "urgent_on_time_rate_percent_min": 95.0, "mean_delay_minutes_max": 5.0, "all_replications_low_soc_stops_equal_zero": true}
+    },
+    "interpretation": "Controlled service requirements; not empirical industry standards."
+  },
+  "rho": {
+    "role": "derived explanatory charging-adequacy diagnostic; not an optimization objective or primitive factor",
+    "definition": "rho = analytical mean charging-demand rate / mean available battery-side WPT charging power, with demand based on DES-consistent round-trip travel plus service auxiliary energy and supply based on N_P times the controlled alignment-condition mean battery-side charging power."
+  },
+  "expected_execution": {
+    "policy_specific_candidates": 540,
+    "replications_per_candidate": 50,
+    "expected_replication_rows": 27000,
+    "expected_common_random_number_sets": 5400,
+    "expected_rows_per_policy": 5400,
+    "authorized_stage1_execution_count": 1,
+    "output_root": "results/stage1_feasibility_frozen/",
+    "result_immutability": "After completion, raw replication metrics are immutable. Only separate derived feasibility-map/report artifacts may be created from the raw results."
+  },
+  "stage2_gate": {
+    "status": "NOT_FROZEN_NOT_AUTHORIZED",
+    "allowed_provisional_items": ["AGV/WPT controlled Low/Base/High CAPEX sensitivity proposals", "lifetime/discount-rate sensitivity proposals"],
+    "blocked_until_user_approval": ["exact KEPCO tariff analysis cell", "economic post-processing", "cost minimization", "economic figure generation", "Stage 2 execution"]
+  }
+}

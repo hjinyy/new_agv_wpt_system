@@ -1,0 +1,21 @@
+{
+  "status": "ABORTED_OOM_NO_VALID_STAGE1_EVIDENCE",
+  "stage": "Stage 1 cost-free feasibility screening",
+  "stage1_config_sha256": "01a20c820f8d85f7cac414022d9c28d4dbed448e98c210fd8bc466c43ad9f090",
+  "reserved_seeds_attempted": [91001, 91002, 91003, 91004],
+  "reserved_seeds_retired_as_potentially_consumed": [91001, 91002, 91003, 91004],
+  "original_reserved_seed_block": [91001, 91002, 91003, 91004, 91005, 91006, 91007, 91008, 91009, 91010, 91011, 91012, 91013, 91014, 91015, 91016, 91017, 91018, 91019, 91020, 91021, 91022, 91023, 91024, 91025, 91026, 91027, 91028, 91029, 91030, 91031, 91032, 91033, 91034, 91035, 91036, 91037, 91038, 91039, 91040, 91041, 91042, 91043, 91044, 91045, 91046, 91047, 91048, 91049, 91050],
+  "expected_crn_work_units": 5400,
+  "expected_replication_rows": 27000,
+  "workers_attempted": 4,
+  "durable_part_files": 0,
+  "durable_replication_rows": 0,
+  "raw_result_created": false,
+  "failure": {
+    "exit_code": -9,
+    "kernel_evidence": "memory.oom.group: concurrent SciPy/HiGHS workers exceeded the 4 GiB Hermes worker cgroup limit; the kernel terminated the entire process group.",
+    "model_interpretation": "resource failure; not a simulation finding"
+  },
+  "stage2_economic_execution": false,
+  "recovery_requires": "explicit user approval of a new disjoint 50-seed block and memory-isolated execution infrastructure"
+}

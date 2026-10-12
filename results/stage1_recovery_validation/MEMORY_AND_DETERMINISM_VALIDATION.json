@@ -1,0 +1,124 @@
+{
+  "status": "PASS",
+  "tested_utc": "2026-10-12T12:54:18.221047+00:00",
+  "smoke_seeds_only": [
+    94001,
+    94002
+  ],
+  "official_seed_overlap": 0,
+  "max_tasks_per_child": 1,
+  "single_worker_full_c1_to_c5": {
+    "workers": 1,
+    "units": [
+      [
+        5,
+        1,
+        75,
+        "Good",
+        94001
+      ],
+      [
+        8,
+        3,
+        105,
+        "Severe",
+        94002
+      ]
+    ],
+    "row_count": 10,
+    "elapsed_s": 376.374525221996,
+    "cgroup_limit_bytes": 4294967296,
+    "cgroup_baseline_bytes": 116924416,
+    "peak_child_rss_bytes": 216203264,
+    "peak_cgroup_bytes": 282996736,
+    "after_cgroup_bytes": 124080128,
+    "worker_pids_alive_after_close": [],
+    "all_simulation_workers_released": true,
+    "memory_released": true
+  },
+  "repeated_single_worker_memory_check": {
+    "workers": 1,
+    "units": [
+      [
+        5,
+        1,
+        75,
+        "Good",
+        94001
+      ],
+      [
+        8,
+        3,
+        105,
+        "Severe",
+        94002
+      ]
+    ],
+    "row_count": 10,
+    "elapsed_s": 378.2538654948585,
+    "cgroup_limit_bytes": 4294967296,
+    "cgroup_baseline_bytes": 124080128,
+    "peak_child_rss_bytes": 214016000,
+    "peak_cgroup_bytes": 282542080,
+    "after_cgroup_bytes": 126390272,
+    "worker_pids_alive_after_close": [],
+    "all_simulation_workers_released": true,
+    "memory_released": true
+  },
+  "two_worker_c5_stress": {
+    "workers": 2,
+    "units": [
+      [
+        5,
+        1,
+        75,
+        "Good",
+        94001
+      ],
+      [
+        8,
+        3,
+        105,
+        "Severe",
+        94002
+      ]
+    ],
+    "row_count": 10,
+    "elapsed_s": 299.8231243924238,
+    "cgroup_limit_bytes": 4294967296,
+    "cgroup_baseline_bytes": 126390272,
+    "peak_child_rss_bytes": 382009344,
+    "peak_cgroup_bytes": 399642624,
+    "after_cgroup_bytes": 126930944,
+    "worker_pids_alive_after_close": [],
+    "all_simulation_workers_released": true,
+    "memory_released": true
+  },
+  "two_worker_70pct_threshold_bytes": 3006477107,
+  "two_worker_c5_peak_within_70pct": true,
+  "memory_not_accumulating": true,
+  "deterministic_equivalence_1_vs_2_workers": {
+    "pass": true,
+    "tolerance_absolute": 1e-10,
+    "max_abs_differences": {
+      "requested_tasks": 0.0,
+      "completed_tasks": 0.0,
+      "completion_rate": 0.0,
+      "mean_delay": 0.0,
+      "urgent_on_time_rate": 0.0,
+      "low_soc_stops": 0.0,
+      "fleet_min_soc": 0.0,
+      "traction_energy": 0.0,
+      "aux_energy": 0.0,
+      "wpt_input_energy": 0.0,
+      "battery_delivered_energy": 0.0,
+      "wpt_loss": 0.0,
+      "mean_efficiency": 0.0,
+      "charging_wait": 0.0,
+      "rho": 0.0
+    }
+  },
+  "all_workers_released_and_memory_released": true,
+  "official_selected_workers": 2,
+  "stage2_economic_execution": false
+}

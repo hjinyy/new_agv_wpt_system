@@ -5,15 +5,16 @@ import pandas as pd
 
 from simulation.literature_wpt import condition_at_delta, distribution_moments
 from stage1_model import configuration_for, load_manifest, task_distances
-from run_stage1_feasibility import STRATEGIES, grid, rho_for, worker
+from run_stage1_feasibility import STRATEGIES, official_grid, recovery_manifest, rho_for, worker
 
 
 def test_frozen_grid_and_count():
-    manifest = load_manifest()
-    units = list(grid(manifest))
+    semantic = load_manifest()
+    recovery = recovery_manifest()
+    units = list(official_grid(semantic, recovery))
     assert len(units) == 5400
-    assert manifest["expected_execution"]["expected_replication_rows"] == 27000
-    assert set(seed for *_, seed in units) == set(range(91001, 91051))
+    assert recovery["expected_execution"]["replication_rows"] == 27000
+    assert set(seed for *_, seed in units) == set(range(93001, 93051))
 
 
 def test_literature_wpt_normalization_and_alignment_moments():

@@ -1,0 +1,40 @@
+{
+  "manifest_kind": "Stage 1 OOM recovery execution infrastructure",
+  "status": "PENDING_ISOLATION_VALIDATION",
+  "semantic_stage1_manifest_path": "config/stage1_feasibility_frozen.json",
+  "semantic_stage1_manifest_sha256": "01a20c820f8d85f7cac414022d9c28d4dbed448e98c210fd8bc466c43ad9f090",
+  "semantic_change_assertion": "No physical WPT model, DES semantics, primitive grid, C1-C5 policy, epsilon feasibility rule, or rho definition is changed by this manifest.",
+  "retired_seed_block": "91001–91050",
+  "retired_seed_provenance_commit": "7d73d4a002932dae52a6c93eead7e4e4d572e94c",
+  "official_stage1_seed_block": {"start": 93001, "end": 93050, "count": 50},
+  "smoke_seeds": [94001, 94002, 94003],
+  "stress_primitive_conditions": [
+    {"n_agvs": 5, "n_pads": 1, "workload": 75, "alignment": "Good"},
+    {"n_agvs": 8, "n_pads": 3, "workload": 105, "alignment": "Severe"}
+  ],
+  "execution_infrastructure": {
+    "max_tasks_per_child": 1,
+    "c1_to_c4_max_workers": 2,
+    "c5_max_workers": 1,
+    "official_max_workers_pending_validation": 2,
+    "durable_part_file_rule": "For every primitive-condition × seed CRN unit, validate exactly C1–C5 five rows and atomically write one durable part file before the worker exits.",
+    "resume_rule": "Existing valid part files are skipped. Invalid or partial files cause a hard failure; they are never silently overwritten.",
+    "solver_record_rule": "Do not retain solver records beyond one CRN unit; worker process exits after the unit."
+  },
+  "resource_gate": {
+    "cgroup_memory_limit_bytes": 4294967296,
+    "required_validation": [
+      "single-worker C1-C5 full-unit smoke/stress using smoke seeds only",
+      "record per-child peak RSS and confirm child exit/release",
+      "two-worker C5 stress test using smoke seeds only",
+      "raise official concurrency to 2 only if a sufficient margin is observed"
+    ],
+    "selection_rule": "Use two official workers only if two-worker peak aggregate RSS remains at or below 70% of the 4-GiB cgroup limit and all isolated children exit. Otherwise use one C5 worker and at most two C1-C4 workers."
+  },
+  "expected_execution": {
+    "crn_work_units": 5400,
+    "replication_rows": 27000,
+    "official_output_root": "results/stage1_feasibility_official_93001_93050/",
+    "stage2_economic_execution": false
+  }
+}

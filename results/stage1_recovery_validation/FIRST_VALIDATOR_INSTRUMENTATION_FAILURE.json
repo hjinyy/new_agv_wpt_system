@@ -1,0 +1,62 @@
+{
+  "status": "FAILED",
+  "tested_utc": "2026-10-12T12:31:34.369114+00:00",
+  "max_tasks_per_child": 1,
+  "single_worker_full_c1_to_c5": {
+    "workers": 1,
+    "units": [
+      [
+        8,
+        3,
+        105,
+        "Severe",
+        94003
+      ]
+    ],
+    "rows": 5,
+    "elapsed_s": 253.6106686689891,
+    "cgroup_limit_bytes": null,
+    "cgroup_baseline_bytes": null,
+    "peak_children_rss_bytes": 229376000,
+    "peak_cgroup_bytes": 0,
+    "after_cgroup_bytes": null,
+    "worker_children_alive_after_close": [
+      3362170
+    ],
+    "all_children_released": false
+  },
+  "two_worker_c5_stress": {
+    "workers": 2,
+    "units": [
+      [
+        5,
+        1,
+        75,
+        "Good",
+        94001
+      ],
+      [
+        8,
+        3,
+        105,
+        "Severe",
+        94002
+      ]
+    ],
+    "rows": 10,
+    "elapsed_s": 300.6000549807213,
+    "cgroup_limit_bytes": null,
+    "cgroup_baseline_bytes": null,
+    "peak_children_rss_bytes": 397877248,
+    "peak_cgroup_bytes": 0,
+    "after_cgroup_bytes": null,
+    "worker_children_alive_after_close": [
+      3362170
+    ],
+    "all_children_released": false
+  },
+  "two_worker_cgroup_margin_bytes": 4294967296,
+  "official_selected_workers": 1,
+  "selection_rule": "Use two official workers only if two-worker peak aggregate RSS remains at or below 70% of the 4-GiB cgroup limit and all isolated children exit. Otherwise use one C5 worker and at most two C1-C4 workers.",
+  "stage2_economic_execution": false
+}

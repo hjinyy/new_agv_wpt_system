@@ -1,3 +1,4 @@
 __pycache__/
 .pytest_cache/
 results/_smoke_stage1_not_evidence/
+results/_smoke_stage1_recovery_not_evidence/

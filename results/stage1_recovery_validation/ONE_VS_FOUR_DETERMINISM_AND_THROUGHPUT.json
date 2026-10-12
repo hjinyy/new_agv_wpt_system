@@ -1,0 +1,56 @@
+{
+  "smoke_seeds_only": [
+    94001,
+    94002,
+    94003
+  ],
+  "official_seed_overlap": 0,
+  "units": [
+    [
+      5,
+      1,
+      75,
+      "Good",
+      94001
+    ],
+    [
+      8,
+      3,
+      105,
+      "Severe",
+      94002
+    ],
+    [
+      8,
+      3,
+      105,
+      "Severe",
+      94003
+    ]
+  ],
+  "rows_per_run": 15,
+  "one_worker_elapsed_s": 666.0371566857211,
+  "four_worker_elapsed_s": 314.00666568335146,
+  "measured_speedup_1_over_4": 2.12109241450741,
+  "one_worker_kpi_sha256": "626b01810659e7ffc4a1997a003f6dad311a0e9d6d22d8a3cc3b352294cd7992",
+  "four_worker_kpi_sha256": "626b01810659e7ffc4a1997a003f6dad311a0e9d6d22d8a3cc3b352294cd7992",
+  "max_abs_differences": {
+    "requested_tasks": 0.0,
+    "completed_tasks": 0.0,
+    "completion_rate": 0.0,
+    "mean_delay": 0.0,
+    "urgent_on_time_rate": 0.0,
+    "low_soc_stops": 0.0,
+    "fleet_min_soc": 0.0,
+    "traction_energy": 0.0,
+    "aux_energy": 0.0,
+    "wpt_input_energy": 0.0,
+    "battery_delivered_energy": 0.0,
+    "wpt_loss": 0.0,
+    "mean_efficiency": 0.0,
+    "charging_wait": 0.0,
+    "rho": 0.0
+  },
+  "tolerance_absolute": 1e-10,
+  "pass": true
+}

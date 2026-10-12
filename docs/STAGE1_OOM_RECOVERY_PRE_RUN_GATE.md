@@ -30,16 +30,20 @@ The validation used only `94001–94002`; official-seed overlap was zero.
 | Child worker release after pool close | no simulation-worker PID remained | yes |
 | Memory release | 124,080,128 / 126,390,272 bytes after runs | yes |
 | C5 2-worker stress peak cgroup | 399,642,624 bytes | yes |
+| C5 3-worker stress peak cgroup | 549,416,960 bytes | yes |
+| C5 4-worker stress peak cgroup | 701,816,832 bytes | yes |
+| 4-worker post-run cgroup | 125,521,920 bytes; no live worker | yes |
 | 70% cgroup threshold | 3,006,477,107 bytes of 4,294,967,296 | yes |
-| Worker-count KPI equivalence | max abs diff = 0 for all audited core KPIs | yes |
+| 1↔2-worker KPI equivalence | max abs diff = 0 for all audited core KPIs | yes |
+| 1↔4-worker KPI equivalence | identical KPI SHA-256; max abs diff = 0 | yes |
 
-The audited 1-worker vs 2-worker core KPIs were requested/completed tasks, completion, mean delay, urgent on-time, low-SOC stops, fleet-min SOC, traction/auxiliary/WPT energy, WPT loss/efficiency, charging wait, and rho. Tolerance was absolute `1e-10`; each observed difference was zero.
+The audited 1-worker vs 2-worker and 1-worker vs 4-worker core KPIs were requested/completed tasks, completion, mean delay, urgent on-time, low-SOC stops, fleet-min SOC, traction/auxiliary/WPT energy, WPT loss/efficiency, charging wait, and rho. Tolerance was absolute `1e-10`; each observed difference was zero.
 
 ## Official execution selection
 
-- Official workers: **2**
-- C5 concurrency: **2**, admitted by the 2-worker peak-memory gate.
+- Official workers: **4**
+- C5 concurrency: **4**, admitted by full four-worker stress, child-memory release, and exact 1-versus-4-worker KPI equivalence.
 - Expected work: `5,400` isolated CRN units, `27,000` replication rows.
-- Runtime estimate: **4.7 days** from the measured two-unit pair average; **up to 11.2 days** under a conservative severe-unit plus spawn-isolation bound. This is an estimate, not a guarantee.
+- Throughput evidence: matching smoke units took 666.04 s on one worker and 314.01 s on four workers, a measured **2.12×** speedup. The official runtime remains scenario-dependent; the prior two-worker estimate is superseded by monitored progress once official execution begins.
 
 This document is a pre-run gate. It is not Stage 1 evidence and contains no official simulation result.

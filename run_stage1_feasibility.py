@@ -248,6 +248,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.smoke == args.execute:
         parser.error("choose exactly one of --smoke or --execute")
-    if args.workers < 1 or args.workers > 2:
-        parser.error("workers must be 1 or 2 under the recovery gate")
+    if args.workers < 1 or args.workers > 4:
+        parser.error("workers must be between 1 and 4 under the recovery gate")
     print(run_smoke(args.workers) if args.smoke else execute(args.workers))

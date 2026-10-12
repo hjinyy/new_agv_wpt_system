@@ -1,0 +1,18 @@
+{
+  "workers": 4,
+  "official_seed_overlap": 0,
+  "seeds": [
+    94001,
+    94002,
+    94003,
+    94004
+  ],
+  "rows": 20,
+  "elapsed_s": 486.638707451988,
+  "cgroup_path": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/hermes-worker-proc_1a2f2604d106.scope",
+  "baseline_cgroup_bytes": 116834304,
+  "peak_cgroup_bytes": 701816832,
+  "peak_child_rss_bytes": 795570176,
+  "after_cgroup_bytes": 125521920,
+  "live_worker_pids_after_close": []
+}

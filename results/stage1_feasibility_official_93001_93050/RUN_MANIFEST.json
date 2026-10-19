@@ -1,0 +1,24 @@
+{
+  "status": "ABORTED_NO_VALID_STAGE1_EVIDENCE",
+  "stage": "Stage 1 cost-free feasibility screening",
+  "abort_confirmed_utc": "2026-10-15T15:48:00+00:00",
+  "failure_classification": "UNHEALTHY_ZERO_DURABLE_THROUGHPUT",
+  "semantic_stage1_manifest_sha256": "01a20c820f8d85f7cac414022d9c28d4dbed448e98c210fd8bc466c43ad9f090",
+  "recovery_manifest_sha256_at_launch": "04c47d109614584ccba51bf9886d7119dd2dfee7cab0a8ed16d177451293fa14",
+  "official_seeds_retired_in_full": {"start": 93001, "end": 93050, "count": 50},
+  "expected_crn_work_units": 5400,
+  "expected_replication_rows": 27000,
+  "observed_valid_part_files": 0,
+  "observed_temporary_part_files": 0,
+  "observed_final_raw_rows": 0,
+  "raw_result_created": false,
+  "stage2_economic_execution": false,
+  "observed_issues": [
+    "No atomic durable CRN part file was created after a completed one-hour activity observation.",
+    "Workers were CPU-active and child processes were replaced, but there was no durable evidence of parent receive, validation, or persistence success.",
+    "Official runner did not record unit-level/policy-level/solver-level live telemetry, so consumed-seed subset cannot be reconstructed."
+  ],
+  "pre_abort_log_sha256": "6b992b53af4ed2c775357cdfb165452bbabc17cbe51424355cb339c9bfd3b1f8",
+  "pre_abort_manifest_sha256": "1933011458ccb169fa30affcd46a2e3f30dc1d5ed17c6e06b7de77c116c97ec2",
+  "immutability": "No valid raw replication result exists. This failed-execution record and the abort provenance document preserve the evidence; neither the retired 93001–93050 seed block nor this run may be represented as valid Stage 1 evidence."
+}

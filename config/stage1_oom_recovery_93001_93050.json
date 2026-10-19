@@ -1,9 +1,14 @@
 {
   "manifest_kind": "Stage 1 OOM recovery execution infrastructure",
-  "status": "FROZEN_VALIDATED_FOUR_WORKER_PENDING_OFFICIAL_EXECUTION",
+  "status": "RECOVERY_VALIDATED_NO_OFFICIAL_SEED_AUTHORIZED",
+  "official_execution_authorized": false,
   "semantic_stage1_manifest_path": "config/stage1_feasibility_frozen.json",
   "semantic_stage1_manifest_sha256": "01a20c820f8d85f7cac414022d9c28d4dbed448e98c210fd8bc466c43ad9f090",
   "semantic_change_assertion": "No physical WPT model, DES semantics, primitive grid, C1-C5 policy, epsilon feasibility rule, or rho definition is changed by this manifest.",
+  "retired_official_seed_blocks": [
+    {"block": "91001–91050", "reason": "OOM-aborted run; no valid evidence", "provenance_commit": "7d73d4a002932dae52a6c93eead7e4e4d572e94c"},
+    {"block": "93001–93050", "reason": "zero durable throughput / failed strict-JSON persistence", "provenance_commit": "94bc9f5f9c331eef2e76a9ce3c80a6d94f5228a7"}
+  ],
   "retired_seed_block": "91001–91050",
   "retired_seed_provenance_commit": "7d73d4a002932dae52a6c93eead7e4e4d572e94c",
   "official_stage1_seed_block": {"start": 93001, "end": 93050, "count": 50},

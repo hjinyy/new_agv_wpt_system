@@ -13,8 +13,17 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
+import os
 from pathlib import Path
 import shutil
+import time
+import traceback
+
+# Execution infrastructure only: force native numerical libraries to one thread
+# before NumPy/SciPy/HiGHS are imported in every spawned worker.
+for _thread_env in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS", "HIGHS_THREADS"):
+    os.environ[_thread_env] = "1"
 
 import numpy as np
 import pandas as pd
@@ -87,38 +96,91 @@ def valid_part(path: Path, unit: tuple[int, int, int, str, int]) -> bool:
         return False
 
 
-def worker(unit: tuple[int, int, int, str, int], output_dir: str | None = None) -> list[dict]:
-    """One isolated CRN unit: identical realization, then C1–C5 sequentially."""
+def json_safe(value):
+    """Canonical JSON representation: unavailable numeric diagnostics become null."""
+    if isinstance(value, dict):
+        return {str(key): json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    if isinstance(value, np.generic):
+        return json_safe(value.item())
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
+
+
+def telemetry_writer(telemetry_dir: str | None, unit: tuple[int, int, int, str, int]):
+    """Return a per-unit append-only JSONL telemetry sink, or a no-op sink."""
+    if not telemetry_dir:
+        return lambda event: None
     n_agvs, n_pads, workload, alignment, seed = unit
-    cfg = configuration_for(n_agvs, n_pads, workload, alignment)
-    distances = task_distances()
-    tasks, initial_soc = generate_common(cfg, seed, distances=distances, urgent_ratio=0.2)
-    rho = rho_for(cfg)
-    rows = []
-    for strategy in STRATEGIES:
-        cls = FrozenC4Sim if strategy == "C4" else V3Sim
-        kwargs = {"current_distances": tuple(distances.values())} if strategy == "C4" else {}
-        sim = cls(cfg, strategy, seed, tasks, initial_soc, "stage1", **kwargs)
-        metrics = sim.run()
-        metrics.update({
-            "n_agvs": n_agvs, "n_pads": n_pads, "workload_tasks_per_h": workload,
-            "alignment": alignment, "rho": rho, "semantic_manifest_sha256": sha256(SEMANTIC_MANIFEST_PATH),
-        })
-        rows.append(metrics)
-        # Solver records remain attached only to this simulator object and disappear when this child exits.
-        del sim
-    validate_unit_rows(rows, unit)
-    if output_dir:
-        path = Path(output_dir) / "parts" / unit_name(unit)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if path.exists():
-            if valid_part(path, unit):
-                raise FileExistsError(f"Refusing to overwrite existing complete CRN unit: {path}")
-            raise RuntimeError(f"Invalid/partial part file requires manual provenance review: {path}")
-        tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(rows, allow_nan=False), encoding="utf-8")
-        tmp.replace(path)  # atomic rename after all five rows validate
-    return rows
+    path = Path(telemetry_dir) / f"{unit_name(unit)}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    base = {"unit": {"n_agvs": n_agvs, "n_pads": n_pads, "workload": workload,
+                     "alignment": alignment, "seed": seed}, "pid": os.getpid()}
+    def emit(event: dict) -> None:
+        record = {"utc": datetime.now(timezone.utc).isoformat(), **base, **event}
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(json_safe(record), allow_nan=False) + "\n")
+            handle.flush()
+    return emit
+
+
+def worker(unit: tuple[int, int, int, str, int], output_dir: str | None = None,
+           telemetry_dir: str | None = None) -> list[dict]:
+    """One isolated CRN unit: identical realization, C1–C5, then atomic persistence."""
+    n_agvs, n_pads, workload, alignment, seed = unit
+    emit = telemetry_writer(telemetry_dir, unit)
+    emit({"event": "worker_start"})
+    try:
+        cfg = configuration_for(n_agvs, n_pads, workload, alignment)
+        distances = task_distances()
+        tasks, initial_soc = generate_common(cfg, seed, distances=distances, urgent_ratio=0.2)
+        rho = rho_for(cfg)
+        emit({"event": "unit_start", "task_count": len(tasks), "operation_hours": cfg["operation_hours"]})
+        rows = []
+        for strategy in STRATEGIES:
+            emit({"event": "policy_start", "policy": strategy, "des_clock_s": 0.0})
+            cls = FrozenC4Sim if strategy == "C4" else V3Sim
+            kwargs = {"current_distances": tuple(distances.values())} if strategy == "C4" else {}
+            if strategy == "C5":
+                kwargs["telemetry_hook"] = emit
+            sim = cls(cfg, strategy, seed, tasks, initial_soc, "stage1", **kwargs)
+            metrics = sim.run()
+            metrics.update({
+                "n_agvs": n_agvs, "n_pads": n_pads, "workload_tasks_per_h": workload,
+                "alignment": alignment, "rho": rho, "semantic_manifest_sha256": sha256(SEMANTIC_MANIFEST_PATH),
+            })
+            rows.append(metrics)
+            emit({"event": "policy_end", "policy": strategy, "des_clock_s": float(cfg["operation_hours"] * 3600),
+                  "c5_call_count": int(getattr(sim, "c5_solver_calls", 0)),
+                  "c5_total_solve_time_s": float(getattr(sim, "c5_solver_time_s", 0.0)),
+                  "completion_rate": float(metrics["completion_rate"]), "low_soc_stops": int(metrics["low_soc_stops"])})
+            del sim
+        validate_unit_rows(rows, unit)
+        emit({"event": "worker_return", "row_count": len(rows)})
+        if output_dir:
+            path = Path(output_dir) / "parts" / unit_name(unit)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            emit({"event": "persistence_start", "path": str(path)})
+            try:
+                if path.exists():
+                    if valid_part(path, unit):
+                        raise FileExistsError(f"Refusing to overwrite existing complete CRN unit: {path}")
+                    raise RuntimeError(f"Invalid/partial part file requires manual provenance review: {path}")
+                tmp = path.with_suffix(".tmp")
+                with tmp.open("w", encoding="utf-8") as handle:
+                    json.dump(json_safe(rows), handle, allow_nan=False)
+                    handle.flush(); os.fsync(handle.fileno())
+                tmp.replace(path)  # atomic rename only after all five rows validate
+                emit({"event": "persistence_success", "path": str(path), "row_count": len(rows)})
+            except Exception:
+                emit({"event": "persistence_failure", "traceback": traceback.format_exc()})
+                raise
+        return rows
+    except Exception:
+        emit({"event": "worker_exception", "traceback": traceback.format_exc()})
+        raise
 
 
 def executor(workers: int) -> ProcessPoolExecutor:
@@ -180,6 +242,8 @@ def run_smoke(workers: int) -> Path:
 
 def execute(workers: int) -> Path:
     semantic, recovery = load_manifest(), recovery_manifest()
+    if recovery.get("official_execution_authorized") is not True:
+        raise RuntimeError("No official Stage 1 seed block is authorized; retired blocks cannot be executed.")
     if sha256(SEMANTIC_MANIFEST_PATH) != recovery["semantic_stage1_manifest_sha256"]:
         raise RuntimeError("Semantic frozen manifest hash mismatch")
     if semantic["stage2_gate"]["status"] != "NOT_FROZEN_NOT_AUTHORIZED":

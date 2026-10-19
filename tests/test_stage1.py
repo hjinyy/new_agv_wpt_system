@@ -5,7 +5,7 @@ import pandas as pd
 
 from simulation.literature_wpt import condition_at_delta, distribution_moments
 from stage1_model import configuration_for, load_manifest, task_distances
-from run_stage1_feasibility import STRATEGIES, official_grid, recovery_manifest, rho_for, worker
+from run_stage1_feasibility import STRATEGIES, json_safe, official_grid, recovery_manifest, rho_for, worker
 
 
 def test_frozen_grid_and_count():
@@ -46,3 +46,8 @@ def test_disjoint_test_seed_returns_complete_policy_set():
     assert frame.replication.nunique() == 1
     assert int(frame.replication.iloc[0]) == 92003
     assert not frame.low_soc_stops.isna().any()
+
+
+def test_json_safe_canonicalizes_nonfinite_diagnostics_only():
+    value = {"finite": 1.25, "missing": float("nan"), "nested": [float("inf"), -float("inf")]}
+    assert json_safe(value) == {"finite": 1.25, "missing": None, "nested": [None, None]}

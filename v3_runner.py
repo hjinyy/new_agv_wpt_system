@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from copy import deepcopy
-import math, time, json
+import math, time, json, warnings
 import numpy as np
 import pandas as pd
 from scipy.optimize import milp, LinearConstraint, Bounds
@@ -34,9 +34,10 @@ class V3Sim(V2Sim):
     It optimizes current charging decisions only; full-horizon MILP is evaluated separately
     on a small case and reported as not used for 24 h when scaling is excessive.
     """
-    def __init__(self, *args, task_index_lookup=None, **kwargs):
+    def __init__(self, *args, task_index_lookup=None, telemetry_hook=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.task_index_lookup = task_index_lookup or {t.task_id: i for i, t in enumerate(self.tasks)}
+        self.telemetry_hook = telemetry_hook
         self.solver_rows = []
         self.milp_schedule_rows = []
         # C4-only counterfactual records: selection with eta term versus w4=0.
@@ -52,6 +53,15 @@ class V3Sim(V2Sim):
             idx = min(start_idx + k, len(self.tasks) - 1)
             mapping[a.agv_id] = self.tasks[idx]
         return mapping
+
+    def _emit_telemetry(self, event: dict) -> None:
+        """Best-effort execution telemetry; never changes simulation control flow."""
+        if self.telemetry_hook is None:
+            return
+        try:
+            self.telemetry_hook(event)
+        except Exception:
+            pass
 
     def choose(self, cands, t, next_task, avail_pads):
         preview = self.preview_task_map(cands, t, next_task)
@@ -334,13 +344,21 @@ class V3Sim(V2Sim):
                 for p in pads:
                     c[xid(i, p, k)] += wpt_loss_weight * loss + conflict_penalty - early_charge_credit - kpi_risk_credit
 
+        call_index = self.c5_solver_calls + 1
+        self._emit_telemetry({"event": "c5_call_start", "c5_call_index": call_index, "des_clock_s": float(t),
+                              "candidate_agvs": int(n), "available_pads": int(m), "n_binary": int(nx),
+                              "n_constraints": int(len(constraints)), "time_limit_s": float(self.cfg.get('c5_time_limit_s', 5.0))})
         tic = time.perf_counter()
         status = -999; msg = ''; objective = np.nan; gap = np.nan; x = None
         time_limit_s = float(self.cfg.get('c5_time_limit_s', 5.0))
         fallback = 0; infeasible = 0; time_limit_hit = 0
         try:
-            res = milp(c=c, integrality=integrality, bounds=bounds, constraints=lc,
-                       options={'time_limit': time_limit_s, 'mip_rel_gap': float(self.cfg.get('c5_mip_rel_gap', 0.001))})
+            with warnings.catch_warnings():
+                # SciPy forwards this documented HiGHS option but warns on every call.
+                warnings.filterwarnings("ignore", message=r"Unrecognized options detected: \{'threads'\}.*", category=RuntimeWarning)
+                res = milp(c=c, integrality=integrality, bounds=bounds, constraints=lc,
+                           options={'time_limit': time_limit_s, 'mip_rel_gap': float(self.cfg.get('c5_mip_rel_gap', 0.001)),
+                                    'threads': 1})
             elapsed = time.perf_counter() - tic
             status = int(res.status); msg = str(res.message); objective = float(res.fun) if res.fun is not None else np.nan
             gap = float(getattr(res, 'mip_gap', np.nan)) if getattr(res, 'mip_gap', None) is not None else np.nan
@@ -355,6 +373,9 @@ class V3Sim(V2Sim):
             msg = repr(e); fallback = 1
 
         self.c5_solver_time_s += elapsed; self.c5_solver_calls += 1
+        self._emit_telemetry({"event": "c5_call_end", "c5_call_index": call_index, "des_clock_s": float(t),
+                              "solve_time_s": float(elapsed), "status": int(status), "time_limit_hit": int(time_limit_hit),
+                              "fallback_used": int(fallback), "message": msg})
         chosen = []
         if x is not None:
             for i, a in enumerate(cands):
